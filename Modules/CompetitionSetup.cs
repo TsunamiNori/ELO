@@ -135,7 +135,7 @@ namespace ELO.Modules
                             $"**Admin Role:** {(comp.AdminRole == null ? "N/A" : MentionUtils.MentionRole(comp.AdminRole.Value))}\n" +
                             $"**Moderator Role:** {(comp.ModeratorRole == null ? "N/A" : MentionUtils.MentionRole(comp.ModeratorRole.Value))}");
                 embed.AddField("Options",
-                            $"**Allow Multiqueuing:** {comp.AllowMultiQueueing}\n" +
+                            $"**Allow Multi-Queuing:** {comp.AllowMultiQueueing}\n" +
                             $"**Allow Negative Score:** {comp.AllowNegativeScore}\n" +
                             $"**Update Nicknames:** {comp.UpdateNames}\n" +
                             $"**Display Error Messages:** {comp.DisplayErrors}\n" +
@@ -148,8 +148,8 @@ namespace ELO.Modules
                 embed.AddField("Formatting", $"**Nickname Format:** {comp.NameFormat}\n" +
                             $"**Registration Message:** {comp.RegisterMessageTemplate}");
                 embed.AddField("Rank Info",
-                $"**Default Loss Amount:** -{comp.DefaultLossModifier}\n" +
                 $"**Default Win Amount:** +{comp.DefaultWinModifier}\n" +
+                $"**Default Loss Amount:** -{comp.DefaultLossModifier}\n" +
                 $"**Default Points On Register:** {comp.DefaultRegisterScore}\n" +
                 $"For rank info use the `ranks` command");
                 await ReplyAsync(embed);
@@ -472,6 +472,26 @@ namespace ELO.Modules
                 await SimpleEmbedAsync($"Allow Negative Score set to {allowNegative.Value}", Color.Green);
             }
         }
+        
+        [Command("AllowMultiQueuing", RunMode = RunMode.Sync)]
+        [Alias("AllowMultiQueueing", "AllowMulti-Queuing", "AllowMulti-Queuing","AllowMultiQ", "AllowMultiQing")]
+        [Summary("Sets whether users are allowed to join multiple queues at once")] 
+        public virtual async Task AllowMultiQueueingAsync(bool? allowMulti = null)
+        {
+            using (var db = new Database())
+            {
+                var competition = db.GetOrCreateCompetition(Context.Guild.Id);
+                if (allowMulti == null)
+                {
+                    await SimpleEmbedAsync($"Current Allow Multi-Queuing Setting: {competition.AllowMultiQueueing}", Color.Blue);
+                    return;
+                }
+                competition.AllowMultiQueueing = allowMulti.Value;
+                db.Update(competition);
+                db.SaveChanges();
+                await SimpleEmbedAsync($"Allow Multi-Queuing set to {allowMulti.Value}", Color.Green);
+            }
+        }
 
         [Command("AllowReRegister", RunMode = RunMode.Sync)]
         [Summary("Sets whether users are allowed to run the register command multiple times")]
@@ -493,6 +513,7 @@ namespace ELO.Modules
         }
 
         [Command("AllowSelfRename", RunMode = RunMode.Sync)]
+        [Alias("AllowRename")]
         [Summary("Sets whether users are allowed to use the rename command")]
         public virtual async Task AllowSelfRenameAsync(bool? selfRename = null)
         {
@@ -512,6 +533,7 @@ namespace ELO.Modules
         }
 
         [Command("DisplayErrors", RunMode = RunMode.Sync)]
+        [Alias("ShowErrors")]
         [Summary("Sets whether error messages are displayed to users")]
         public virtual async Task DisplayErrorsAsync(bool? displayErrors = null)
         {
